@@ -16,12 +16,6 @@ const decrypt = crypto.createDecipheriv(algorithm, secretKey, iv);
 
 // write file
 const w = fs.createWriteStream('file.out.txt');
-let text = "testt";
-const encrypted = Buffer.concat([encrypt.update(text), encrypt.final()]);
-
-   
-console.log(encrypt.toString('hex'));
-console.log(encrypt)
 
 // start pipe
 r.pipe(encrypt)

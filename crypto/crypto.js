@@ -22,10 +22,26 @@ const decrypt = (hash) => {
 
     const decrpyted = Buffer.concat([decipher.update(Buffer.from(hash.content, 'hex')), decipher.final()]);
 
-    return decrpyted.toString();
+    return c
 };
+
+
+function encryption(text){
+    const cipher = crypto.createCipheriv(algorithm, secretKey, iv);
+    const encrypted = Buffer.concat([cipher.update(text), cipher.final()]);
+    return encrypted.toString('hex');
+  }
+  
+  function decryption(text){
+    const decipher = crypto.createDecipheriv(algorithm, secretKey, iv);
+    const decrpyted = Buffer.concat([decipher.update(Buffer.from(text, 'hex')), decipher.final()]);
+    console.log(decrpyted.toString());
+    return decrpyted.toString();
+  }
 
 module.exports = {
     encrypt,
-    decrypt
+    decrypt,
+    encryption,
+    decryption
 };

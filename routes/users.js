@@ -1,8 +1,27 @@
 var express = require('express');
+const crypto = require('crypto');
 var router = express.Router();
 var db = require('../db');
 var helpers = require('../helpers');
 var errors = [];
+
+const algorithm = 'aes-256-ctr';
+const secretKey = 'vOVH6sdmpNWjRRIqCc7rdxs01lwHzfr3';
+const iv = crypto.randomBytes(16);
+// const iv = "692e44dbbea073fc1a8d1c37ea68dffa";
+
+function encryption(text){
+  const cipher = crypto.createCipheriv(algorithm, secretKey, iv);
+  const encrypted = Buffer.concat([cipher.update(text), cipher.final()]);
+  return encrypted.toString('hex');
+}
+
+function decryption(text){
+  const decipher = crypto.createDecipheriv(algorithm, secretKey, iv);
+  const decrpyted = Buffer.concat([decipher.update(Buffer.from(text, 'hex')), decipher.final()]);
+  console.log(decrpyted.toString());
+  return decrpyted.toString();
+}
 
 router.get('/register', helpers.loginChecker, function (req, res, next) {
 
@@ -34,6 +53,9 @@ router.post('/register', helpers.loginChecker, function (req, res, next) {
 
   // var sqlQuery = `INSERT INTO users VALUES(NULL, ?, MD5(?), ?)`;
   var sqlQuery = `INSERT INTO users VALUES(NULL, ?, ?, ?)`;
+  /* encrypt */
+  req.body.psw = encryption(req.body.psw);
+  console.log("mk sau encrpytion ", req.body.psw);
   var values = [req.body.email, req.body.psw, req.body.fname];
 
   db.query(sqlQuery, values, function (err, results, fields) {
@@ -102,7 +124,7 @@ router.post('/login', function (req, res, next) {
   console.log(sqlQuery);
 
   db.query(sqlQuery, function (err, results, fields) {
-  // db.query(sqlQuery, values, function (err, results, fields) {
+  // db.query(sqlQuery, values, function (err, results, fields) {fvz
     console.log("results ", results)
     if (err) {
       errors.push(err.message);
@@ -115,6 +137,7 @@ router.post('/login', function (req, res, next) {
     if (results.length > 0) {
       req.session.authorised = true;
       req.session.fname = results[0].user_fname
+      // req.session.psw = results[0].user_pass
       res.redirect('/');
       return;
     } else {
