@@ -1,27 +1,9 @@
 var express = require('express');
-const crypto = require('crypto');
 var router = express.Router();
 var db = require('../db');
 var helpers = require('../helpers');
 var errors = [];
-
-const algorithm = 'aes-256-ctr';
-const secretKey = 'vOVH6sdmpNWjRRIqCc7rdxs01lwHzfr3';
-const iv = crypto.randomBytes(16);
-// const iv = "692e44dbbea073fc1a8d1c37ea68dffa";
-
-function encryption(text){
-  const cipher = crypto.createCipheriv(algorithm, secretKey, iv);
-  const encrypted = Buffer.concat([cipher.update(text), cipher.final()]);
-  return encrypted.toString('hex');
-}
-
-function decryption(text){
-  const decipher = crypto.createDecipheriv(algorithm, secretKey, iv);
-  const decrpyted = Buffer.concat([decipher.update(Buffer.from(text, 'hex')), decipher.final()]);
-  console.log(decrpyted.toString());
-  return decrpyted.toString();
-}
+var crypt = require('../crypto/crypto')
 
 router.get('/register', helpers.loginChecker, function (req, res, next) {
 
@@ -54,7 +36,7 @@ router.post('/register', helpers.loginChecker, function (req, res, next) {
   // var sqlQuery = `INSERT INTO users VALUES(NULL, ?, MD5(?), ?)`;
   var sqlQuery = `INSERT INTO users VALUES(NULL, ?, ?, ?)`;
   /* encrypt */
-  req.body.psw = encryption(req.body.psw);
+  req.body.fname = crypt.encryption(req.body.fname);
   console.log("mk sau encrpytion ", req.body.psw);
   var values = [req.body.email, req.body.psw, req.body.fname];
 
@@ -114,8 +96,8 @@ router.post('/login', function (req, res, next) {
   // }
 
   // var sqlQuery = `SELECT * FROM users WHERE user_email = ? AND user_pass = MD5(?)`;
-  var email = "ducdothe98@gmail.com";
-  var sqlQuery = 'SELECT * FROM users WHERE user_email = "' + req.body.email + '"' +  'AND user_pass = "' +req.body.psw+ ' "';
+  // var email = "ducdothe98@gmail.com";
+  var sqlQuery = 'SELECT * FROM users WHERE user_email = "' + req.body.email + '"' +  ' AND user_pass = "' + req.body.psw + '"';
   // req.body.email = "ducdothe98@gmail.com' or 1=1;--";
   
   var values = [email, req.body.psw];
@@ -136,8 +118,17 @@ router.post('/login', function (req, res, next) {
 
     if (results.length > 0) {
       req.session.authorised = true;
+      
+      console.log("fname , decr", req.session.fname, results[0].user_fname);
+      /* this one for decrypt database */
+      for(let i = 0 ; i< results.length; i++) {
+        console.log("decr", results[i].user_fname);
+        results[i].user_fname = crypt.decryption(results[i].user_fname);
+        console.log("decr", results[i].user_fname);
+      }
+      console.log("fname , decr", req.session.fname, results[0].user_fname);
       req.session.fname = results[0].user_fname
-      // req.session.psw = results[0].user_pass
+
       res.redirect('/');
       return;
     } else {
