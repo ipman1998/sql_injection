@@ -37,6 +37,7 @@ router.post('/register', helpers.loginChecker, function (req, res, next) {
   var sqlQuery = `INSERT INTO users VALUES(NULL, ?, ?, ?)`;
   /* encrypt */
   req.body.fname = crypt.encryption(req.body.fname);
+  req.body.email = crypt.encryption(req.body.email);
   console.log("mk sau encrpytion ", req.body.psw);
   var values = [req.body.email, req.body.psw, req.body.fname];
 
@@ -97,16 +98,17 @@ router.post('/login', function (req, res, next) {
 
   // var sqlQuery = `SELECT * FROM users WHERE user_email = ? AND user_pass = MD5(?)`;
   // var email = "ducdothe98@gmail.com";
+  req.body.email = crypt.encryption(req.body.email);
   var sqlQuery = 'SELECT * FROM users WHERE user_email = "' + req.body.email + '"' +  ' AND user_pass = "' + req.body.psw + '"';
   // req.body.email = "ducdothe98@gmail.com' or 1=1;--";
   
-  var values = [email, req.body.psw];
-  console.log(email);
+  // var values = [email, req.body.psw];
+  // console.log(email);
   console.log(req.body.email);
   console.log(sqlQuery);
 
   db.query(sqlQuery, function (err, results, fields) {
-  // db.query(sqlQuery, values, function (err, results, fields) {fvz
+  // db.query(sqlQuery, values, function (err, results, fields) {
     console.log("results ", results)
     if (err) {
       errors.push(err.message);
